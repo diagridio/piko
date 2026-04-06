@@ -1,0 +1,125 @@
+name: release/create
+
+concurrency: create-release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version'
+        type: string
+        required: true
+      patch:
+        description: 'Patch an existing release branch'
+        type: boolean
+        default: false
+      dry_run:
+        description: 'Dry run — print planned actions without executing'
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
+
+jobs:
+  create:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Parse and validate version
+        id: version
+        run: |
+          VERSION="${{ inputs.version }}"
+
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version must be in X.Y.Z format (e.g., 1.0.0), got: ${VERSION}"
+            exit 1
+          fi
+
+          MAJOR=$(echo "$VERSION" | cut -d. -f1)
+          MINOR=$(echo "$VERSION" | cut -d. -f2)
+          PATCH=$(echo "$VERSION" | cut -d. -f3)
+          BRANCH="release/${MAJOR}.${MINOR}"
+          TAG="v${VERSION}"
+
+          echo "major=${MAJOR}" >> "$GITHUB_OUTPUT"
+          echo "minor=${MINOR}" >> "$GITHUB_OUTPUT"
+          echo "patch=${PATCH}" >> "$GITHUB_OUTPUT"
+          echo "branch=${BRANCH}" >> "$GITHUB_OUTPUT"
+          echo "tag=${TAG}" >> "$GITHUB_OUTPUT"
+
+          echo "### Release Parameters" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Key | Value |" >> "$GITHUB_STEP_SUMMARY"
+          echo "|-----|-------|" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Version | ${VERSION} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Branch | ${BRANCH} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Tag | ${TAG} |" >> "$GITHUB_STEP_SUMMARY"
+          echo "| Mode | ${{ inputs.patch && 'patch' || 'new release' }} |" >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Create release branch (new release)
+        if: ${{ !inputs.patch }}
+        run: |
+          BRANCH="${{ steps.version.outputs.branch }}"
+          TAG="${{ steps.version.outputs.tag }}"
+
+          if git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
+            echo "::error::Branch ${BRANCH} already exists. Use patch mode to create a patch release on it."
+            exit 1
+          fi
+
+          if git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
+            echo "::error::Tag ${TAG} already exists."
+            exit 1
+          fi
+
+          echo "Creating branch ${BRANCH} from main and tagging ${TAG}"
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "::notice::[DRY RUN] Would create branch ${BRANCH} from main and tag ${TAG}"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Always branch from main regardless of which ref triggered the workflow
+          git checkout main
+          git checkout -b "$BRANCH"
+          git push origin "$BRANCH"
+          git tag -a "$TAG" -m "Release ${TAG}"
+          git push origin "$TAG"
+
+      - name: Create patch tag (existing release)
+        if: ${{ inputs.patch }}
+        run: |
+          BRANCH="${{ steps.version.outputs.branch }}"
+          TAG="${{ steps.version.outputs.tag }}"
+
+          if ! git ls-remote --heads origin "$BRANCH" | grep -q "$BRANCH"; then
+            echo "::error::Branch ${BRANCH} does not exist. Create a new release first (uncheck patch)."
+            exit 1
+          fi
+
+          if git ls-remote --tags origin "$TAG" | grep -q "$TAG"; then
+            echo "::error::Tag ${TAG} already exists."
+            exit 1
+          fi
+
+          echo "Creating tag ${TAG} on branch ${BRANCH}"
+
+          if [ "${{ inputs.dry_run }}" = "true" ]; then
+            echo "::notice::[DRY RUN] Would create tag ${TAG} on branch ${BRANCH}"
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          # Check out the release branch and tag the HEAD
+          git checkout "$BRANCH"
+          git pull origin "$BRANCH"
+          git tag -a "$TAG" -m "Release ${TAG}"
+          git push origin "$TAG"
