@@ -21,6 +21,7 @@ env:
 jobs:
   publish-edge:
     runs-on: ubuntu-latest
+    environment: development
     steps:
       - uses: actions/checkout@v4
 
