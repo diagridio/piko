@@ -1,4 +1,4 @@
-name: Build
+name: ci/piko
 
 permissions:
   contents: read
@@ -13,27 +13,27 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: '1.25.5'
+          go-version-file: 'go.mod'
 
       - name: Build
         run: go build ./...
+
+      - name: Build Docker image
+        run: docker build --build-arg version=ci -f build/Dockerfile .
 
   test:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v4
+      - uses: actions/setup-go@v5
         with:
-          go-version: '1.25.5'
-
-      - name: Build
-        run: go build ./...
+          go-version-file: 'go.mod'
 
       - name: Unit Tests
         run: go test ./... -v
@@ -45,11 +45,11 @@ jobs:
     runs-on: ubuntu-latest
     needs: build
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
-      - uses: actions/setup-go@v3
+      - uses: actions/setup-go@v5
         with:
-          go-version: '1.25.5'
+          go-version-file: 'go.mod'
 
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
