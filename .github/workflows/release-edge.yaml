@@ -50,7 +50,7 @@ jobs:
         id: tags
         run: |
           SHORT_SHA=$(git rev-parse --short HEAD)
-          GCP_IMAGE="${{ secrets.GCP_CONTAINER_REGISTRY_HOST }}/${{ secrets.GCP_DOCKER_PUBLIC_REPOSITORY }}/${IMAGE_NAME}"
+          GCP_IMAGE="${{ secrets.GCP_CONTAINER_REGISTRY_HOST }}/${{ secrets.GCP_PROJECT_ID }}/${{ secrets.GCP_DOCKER_PUBLIC_REPOSITORY }}/${IMAGE_NAME}"
           echo "tags=${GCP_IMAGE}:edge,${GCP_IMAGE}:${SHORT_SHA}" >> "$GITHUB_OUTPUT"
 
       - name: Build and push
