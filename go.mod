@@ -1,12 +1,12 @@
 module github.com/andydunstall/piko
 
-go 1.25.5
+go 1.26.11
 
 require (
 	github.com/MicahParks/keyfunc/v3 v3.8.0
 	github.com/andydunstall/yamux v0.1.6
 	github.com/gin-gonic/gin v1.11.0
-	github.com/go-jose/go-jose/v4 v4.1.3
+	github.com/go-jose/go-jose/v4 v4.1.9
 	github.com/goccy/go-yaml v1.19.2
 	github.com/golang-jwt/jwt/v5 v5.3.1
 	github.com/gorilla/websocket v1.5.3
@@ -19,7 +19,7 @@ require (
 	github.com/ugorji/go/codec v1.3.1
 	go.uber.org/atomic v1.11.0
 	go.uber.org/zap v1.27.1
-	golang.org/x/sync v0.19.0
+	golang.org/x/sync v0.25.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
@@ -51,15 +51,15 @@ require (
 	github.com/prometheus/common v0.66.1 // indirect
 	github.com/prometheus/procfs v0.16.1 // indirect
 	github.com/quic-go/qpack v0.6.0 // indirect
-	github.com/quic-go/quic-go v0.57.0 // indirect
+	github.com/quic-go/quic-go v0.59.1 // indirect
 	github.com/twitchyliquid64/golang-asm v0.15.1 // indirect
 	go.uber.org/multierr v1.11.0 // indirect
 	go.yaml.in/yaml/v2 v2.4.2 // indirect
 	golang.org/x/arch v0.20.0 // indirect
-	golang.org/x/crypto v0.41.0 // indirect
-	golang.org/x/net v0.43.0 // indirect
-	golang.org/x/sys v0.35.0 // indirect
-	golang.org/x/text v0.28.0 // indirect
+	golang.org/x/crypto v0.59.0 // indirect
+	golang.org/x/net v0.62.0 // indirect
+	golang.org/x/sys v0.50.0 // indirect
+	golang.org/x/text v0.44.0 // indirect
 	golang.org/x/time v0.12.0 // indirect
 	google.golang.org/protobuf v1.36.9 // indirect
 )
