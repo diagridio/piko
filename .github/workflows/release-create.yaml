@@ -20,6 +20,8 @@ on:
 
 permissions:
   contents: write
+  # To start release/build on the new tag.
+  actions: write
 
 jobs:
   create:
@@ -123,3 +125,25 @@ jobs:
           git pull origin "$BRANCH"
           git tag -a "$TAG" -m "Release ${TAG}"
           git push origin "$TAG"
+
+      # The tag above is pushed with GITHUB_TOKEN, and GitHub starts no workflow
+      # from such a push, so release/build would never run for it. A dispatch is
+      # the exception, so start the build that way. It runs release/build as the
+      # tag has it: the tag's commit must include its workflow_dispatch trigger.
+      - name: Start the image build
+        if: ${{ !inputs.dry_run }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          TAG: ${{ steps.version.outputs.tag }}
+        run: |
+          # The tag was pushed seconds ago; give the API a moment to see it.
+          for attempt in 1 2 3; do
+            gh workflow run release-build.yaml --ref "$TAG" && break
+            if [ "$attempt" = 3 ]; then
+              echo "::error::Could not start release/build for ${TAG}. Dispatch it by hand on ${TAG}, or push the tag yourself."
+              exit 1
+            fi
+            sleep 10
+          done
+          echo "Started release/build for ${TAG}: https://github.com/${GH_REPO}/actions/workflows/release-build.yaml" >> "$GITHUB_STEP_SUMMARY"
