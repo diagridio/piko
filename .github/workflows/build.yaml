@@ -54,4 +54,6 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@v9
         with:
-          version: v2.7.2
+          # Built with Go 1.26: golangci-lint refuses to lint code whose go.mod
+          # targets a newer Go than the one it was built with.
+          version: v2.11.1
